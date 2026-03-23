@@ -99,9 +99,9 @@ def get_medical_news():
         return "- Novas diretrizes de HAS 2024\n- Atualizações em sepse pediátrica\n- Manejo moderno de insuficiência cardíaca"
 
 def generate_article():
-    api_key = os.environ.get("GOOGLE_AI_KEY")
+    api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise ValueError("GOOGLE_AI_KEY não encontrada nas variáveis de ambiente.")
+        raise ValueError("GEMINI_API_KEY não encontrada nas variáveis de ambiente.")
     
     genai.configure(api_key=api_key)
     # Using gemini-3-flash-preview as requested by the user
