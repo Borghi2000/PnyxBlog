@@ -21,7 +21,7 @@ load_env()
 
 def get_approval_from_telegram(article_title):
     """Envia o título do artigo para o Telegram e aguarda aprovação manual."""
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    token = os.environ.get("BOT_API")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     
     if not token or not chat_id:
