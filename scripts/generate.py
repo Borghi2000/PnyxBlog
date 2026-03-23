@@ -28,13 +28,17 @@ def get_approval_from_telegram(article_json):
         print("Aviso: Configurações do Telegram ausentes. Pulando aprovação (Modo Automático).")
         return True
     
-    # Limpa as tags <span className="...">...</span> que o Telegram não aceita
+    # Limpa tags HTML e caracteres especiais que quebram o Telegram
+    import html
     import re
     def clean_html_for_telegram(text):
         if not text: return ""
-        # Remove as tags span inteiras ou apenas limpa os atributos
-        text = re.sub(r'<span[^>]*>', '<b>', text)
-        text = text.replace('</span>', '</b>')
+        # 1. Escape caracteres HTML padrão (<, >, &)
+        text = html.escape(text)
+        # 2. Re-habilita apenas o negrito básico para o Telegram onde havia spans
+        # Note: O escape transformou <span...> em &lt;span...&gt;
+        text = re.sub(r'&lt;span[^&]*&gt;', '<b>', text)
+        text = text.replace('&lt;/span&gt;', '</b>')
         return text
 
     title = article_json.get("title", "Novo Artigo")
@@ -179,18 +183,18 @@ Retorne APENAS um objeto JSON válido, sem markdown em volta (sem ```json), com 
   "date": "YYYY-MM-DD",
   "category": "Atualização Médica",
   "tags": ["Tag1", "Tag2"],
-  "content": {
-    "contexto_clinico": "Parágrafos MENSURAVELMENTE LONGOS (mínimo 300 palavras nesta seção) detalhando a epidemiologia, fisiopatologia avançada e quadro clínico completo. Use abundantemente o destaque azul em sintomas e sinais físicos.",
-    "o_que_mudou": "Análise técnica profunda das mudanças recentes ou consensos vigentes. Cite nomes de grandes estudos se houver.",
-    "evidencias_e_guidelines": "Detalhamento das referências oficiais (ex: Diretriz da SBC, Guidelines da AHA/ESC/WHO), especificando graus de recomendação e níveis de evidência.",
-    "o_que_muda_na_pratica": "Uma LISTA DE TÓPICOS (PONTOS CHAVE) clara e direta com o passo-a-passo clínico para o plantão e para a prova de residência (Dicas de Ouro / Macetes), focando no que cai nas bancas de elite (USP, Unicamp, ENARE, etc.). Use obrigatoriamente quebras de linha (\\n) entre os tópicos.",
+    "content": {
+      "contexto_clinico": "Parágrafos MENSURAVELMENTE LONGOS (mínimo 300 palavras nesta seção) detalhando a epidemiologia, fisiopatologia avançada e quadro clínico completo. Use abundantemente o destaque azul em sintomas e sinais físicos.",
+      "o_que_mudou": "Análise técnica profunda das mudanças recentes ou consensos vigentes. Cite nomes de grandes estudos se houver.",
+      "evidencias_e_guidelines": "Detalhamento das referências oficiais (ex: Diretriz da SBC, Guidelines da AHA/ESC/WHO), especificando graus de recomendação e níveis de evidência.",
+      "o_que_muda_na_pratica": "Uma LISTA DE TÓPICOS (PONTOS CHAVE) clara e direta com o passo-a-passo clínico para o plantão e para a prova de residência (Dicas de Ouro / Macetes), focando no que cai nas bancas de elite (USP, Unicamp, ENARE, etc.). Use obrigatoriamente quebras de linha (\\n) entre os tópicos."
+    },
     "references": [
       {
         "title": "Referência 1 em formato ABNT Completo (Autor, Título, Fonte, Ano)",
         "url": "https://url-da-fonte-1.com"
       }
     ]
-  }
 }
 """
 
@@ -220,7 +224,8 @@ Lembre-se: SAÍDA APENAS EM JSON VÁLIDO.
         # --- APROVAÇÃO VIA TELEGRAM ---
         # Se você não configurar TELEGRAM_BOT_TOKEN, ele pula esta etapa.
         if not get_approval_from_telegram(article_json):
-            return # Encerra sem salvar se não for aprovado
+            print("🚫 Artigo rejeitado no Telegram. Abortando.")
+            exit(1) # Força erro no CI para não prosseguir
             
         # Garante a data correta
         article_json["date"] = today_str
