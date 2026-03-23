@@ -2,10 +2,8 @@ name: Generate Weekly Blog Post
 
 on:
   schedule:
-    - cron: '0 7 * * 1'
-  workflow_dispatch:
-  push:
-    branches: [main]
+    - cron: '0 7 * * 1' # Roda semanalmente, toda segunda-feira às 07:00 UTC
+  workflow_dispatch: # Permite disparo manual
 
 jobs:
   generate-article:
