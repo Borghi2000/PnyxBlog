@@ -150,9 +150,14 @@ Retorne APENAS um objeto JSON válido, sem markdown em volta (sem ```json), com 
     "contexto_clinico": "Parágrafos MENSURAVELMENTE LONGOS (mínimo 300 palavras nesta seção) detalhando a epidemiologia, fisiopatologia avançada e quadro clínico completo. Use abundantemente o destaque azul em sintomas e sinais físicos.",
     "o_que_mudou": "Análise técnica profunda das mudanças recentes ou consensos vigentes. Cite nomes de grandes estudos se houver.",
     "evidencias_e_guidelines": "Detalhamento das referências oficiais (ex: Diretriz da SBC, Guidelines da AHA/ESC/WHO), especificando graus de recomendação e níveis de evidência.",
-    "o_que_muda_na_pratica": "Passo-a-passo clínico para o plantão e para a prova de residência (Dicas de Ouro / Macetes), focando no que cai nas bancas de elite (USP, Unicamp, ENARE, etc.)."
-  },
-  "source_urls": ["URL da fonte oficial baseada na notícia fornecida"]
+    "o_que_muda_na_pratica": "Uma LISTA DE TÓPICOS (PONTOS CHAVE) clara e direta com o passo-a-passo clínico para o plantão e para a prova de residência (Dicas de Ouro / Macetes), focando no que cai nas bancas de elite (USP, Unicamp, ENARE, etc.). Use obrigatoriamente quebras de linha (\\n) entre os tópicos.",
+    "references": [
+      {
+        "title": "Referência 1 em formato ABNT Completo (Autor, Título, Fonte, Ano)",
+        "url": "https://url-da-fonte-1.com"
+      }
+    ]
+  }
 }
 """
 
