@@ -28,12 +28,21 @@ def get_approval_from_telegram(article_json):
         print("Aviso: Configurações do Telegram ausentes. Pulando aprovação (Modo Automático).")
         return True
     
+    # Limpa as tags <span className="...">...</span> que o Telegram não aceita
+    import re
+    def clean_html_for_telegram(text):
+        if not text: return ""
+        # Remove as tags span inteiras ou apenas limpa os atributos
+        text = re.sub(r'<span[^>]*>', '<b>', text)
+        text = text.replace('</span>', '</b>')
+        return text
+
     title = article_json.get("title", "Novo Artigo")
     content = article_json.get("content", {})
-    
-    contexto = content.get("contexto_clinico", "")[:500] + "..."
-    mudou = content.get("o_que_mudou", "")[:500] + "..."
-    pratica = content.get("o_que_muda_na_pratica", "")[:500] + "..."
+
+    contexto = clean_html_for_telegram(content.get("contexto_clinico", ""))[:500] + "..."
+    mudou = clean_html_for_telegram(content.get("o_que_mudou", ""))[:500] + "..."
+    pratica = clean_html_for_telegram(content.get("o_que_muda_na_pratica", ""))[:500] + "..."
 
     url_send = f"https://api.telegram.org/bot{token}/sendMessage"
     text = (
@@ -53,11 +62,11 @@ def get_approval_from_telegram(article_json):
         resp = requests.post(url_send, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=15)
         if resp.status_code != 200:
             print(f"Erro na API do Telegram (sendMessage): {resp.status_code} - {resp.text}")
-            return True 
+            return False # Se não conseguiu mandar, melhor travar para não postar sem ver
         print(f"Solicitação de aprovação enviada para o Telegram (ID: {chat_id}).")
     except Exception as e:
         print(f"Erro de conexão ao enviar para o Telegram: {e}")
-        return True
+        return False # Garante segurança se falhar a rede
 
     print("Aguardando resposta no Telegram (Timeout: 10 minutos)...")
     start_time = time.time()
