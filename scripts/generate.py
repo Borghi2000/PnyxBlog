@@ -6,6 +6,19 @@ from ddgs import DDGS
 import requests
 import time
 
+def load_env():
+    """Carrega variáveis de ambiente de um arquivo .env local."""
+    env_path = os.path.join(os.path.dirname(__file__), ".env")
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ[key.strip()] = value.strip()
+
+load_env()
+
 def get_approval_from_telegram(article_title):
     """Envia o título do artigo para o Telegram e aguarda aprovação manual."""
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -86,9 +99,9 @@ def get_medical_news():
         return "- Novas diretrizes de HAS 2024\n- Atualizações em sepse pediátrica\n- Manejo moderno de insuficiência cardíaca"
 
 def generate_article():
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("GOOGLE_AI_KEY")
     if not api_key:
-        raise ValueError("GEMINI_API_KEY não encontrada nas variáveis de ambiente.")
+        raise ValueError("GOOGLE_AI_KEY não encontrada nas variáveis de ambiente.")
     
     genai.configure(api_key=api_key)
     # Using gemini-3-flash-preview as requested by the user
