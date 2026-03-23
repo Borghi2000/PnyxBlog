@@ -3,6 +3,71 @@ import json
 import datetime
 import google.generativeai as genai
 from ddgs import DDGS
+import requests
+import time
+
+def get_approval_from_telegram(article_title):
+    """Envia o título do artigo para o Telegram e aguarda aprovação manual."""
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    
+    if not token or not chat_id:
+        print("Aviso: Configurações do Telegram ausentes. Pulando aprovação (Modo Automático).")
+        return True
+    
+    url_send = f"https://api.telegram.org/bot{token}/sendMessage"
+    text = (
+        f"🩺 <b>NOVO ARTIGO PNYXMED GERADO!</b>\n\n"
+        f"<b>Título:</b> {article_title}\n\n"
+        f"Responda <b>SIM</b> para publicar agora ou <b>NÃO</b> para descartar."
+    )
+    
+    try:
+        requests.post(url_send, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"})
+        print(f"Solicitação de aprovação enviada para o Telegram (ID: {chat_id}).")
+    except Exception as e:
+        print(f"Erro ao enviar para o Telegram: {e}")
+        return True # Segue automático se falhar a rede
+
+    print("Aguardando resposta no Telegram (Timeout: 10 minutos)...")
+    start_time = time.time()
+    last_update_id = 0
+    
+    # Busca o último update_id para ignorar mensagens antigas
+    try:
+        initial_updates = requests.get(f"https://api.telegram.org/bot{token}/getUpdates?limit=1").json()
+        if initial_updates.get("result"):
+            last_update_id = initial_updates["result"][-1]["update_id"]
+    except:
+        pass
+
+    while time.time() - start_time < 600: # 10 minutos
+        try:
+            offset = int(last_update_id) + 1
+            url_updates = f"https://api.telegram.org/bot{token}/getUpdates?offset={offset}&timeout=30"
+            resp = requests.get(url_updates, timeout=35).json()
+            
+            if resp.get("result"):
+                for update in resp["result"]:
+                    last_update_id = update["update_id"]
+                    message = update.get("message", {})
+                    
+                    # Verifica se a mensagem veio do chat_id correto
+                    if str(message.get("chat", {}).get("id")) == str(chat_id):
+                        text_received = message.get("text", "").upper().strip()
+                        if text_received == "SIM":
+                            print("✅ Artigo APROVADO via Telegram!")
+                            return True
+                        if text_received in ["NÃO", "NAO", "NO"]:
+                            print("❌ Artigo REJEITADO via Telegram.")
+                            return False
+        except Exception as e:
+            print(f"Erro ao consultar updates: {e}")
+        
+        time.sleep(5)
+    
+    print("⏰ Timeout: Nenhuma resposta recebida no Telegram. Artigo descartado.")
+    return False
 
 def get_medical_news():
     """Busca as últimas notícias médicas e diretrizes usando DuckDuckGo (Gratuito)"""
@@ -93,9 +158,15 @@ Lembre-se: SAÍDA APENAS EM JSON VÁLIDO.
     
     content = response.text
     
-    # Validação Básica
+    # Validação Básica e Aprovação
     try:
         article_json = json.loads(content)
+        
+        # --- APROVAÇÃO VIA TELEGRAM ---
+        # Se você não configurar TELEGRAM_BOT_TOKEN, ele pula esta etapa.
+        if not get_approval_from_telegram(article_json.get("title", "Novo Artigo")):
+            return # Encerra sem salvar se não for aprovado
+            
         # Garante a data correta
         article_json["date"] = today_str
         file_name = f"{today_str}-{article_json['id'].split('-', 3)[-1]}.json"
