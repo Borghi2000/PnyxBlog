@@ -99,9 +99,13 @@ def get_medical_news():
         return "- Novas diretrizes de HAS 2024\n- Atualizações em sepse pediátrica\n- Manejo moderno de insuficiência cardíaca"
 
 def generate_article():
-    api_key = os.environ.get("GEMINI_API_KEY")
+    # Prioriza o sistema de secrets já existente (GOOGLE_AI_KEY no index.ts / GEMINI_API_KEY no GitHub)
+    api_key = os.environ.get("GOOGLE_AI_KEY") or os.environ.get("GEMINI_API_KEY")
+    
     if not api_key:
-        raise ValueError("GEMINI_API_KEY não encontrada nas variáveis de ambiente.")
+        print("Aviso: Nenhuma chave (GOOGLE_AI_KEY ou GEMINI_API_KEY) foi encontrada no ambiente.")
+        print("Certifique-se de que a secret esteja configurada no seu provedor ou ambiente.")
+        return
     
     genai.configure(api_key=api_key)
     # Using gemini-3-flash-preview as requested by the user
