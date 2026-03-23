@@ -38,4 +38,5 @@ jobs:
           git config --global user.email "bot@pnyxmed.com.br"
           git add articles/
           git diff --quiet && git diff --staged --quiet || git commit -m "docs: generate daily medical article"
-          git push
+          git pull --rebase origin main
+          git push origin main

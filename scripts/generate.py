@@ -19,8 +19,8 @@ def load_env():
 
 load_env()
 
-def get_approval_from_telegram(article_title):
-    """Envia o título do artigo para o Telegram e aguarda aprovação manual."""
+def get_approval_from_telegram(article_json):
+    """Envia o resumo completo do artigo para o Telegram e aguarda aprovação manual."""
     token = os.environ.get("BOT_API")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     
@@ -28,22 +28,36 @@ def get_approval_from_telegram(article_title):
         print("Aviso: Configurações do Telegram ausentes. Pulando aprovação (Modo Automático).")
         return True
     
+    title = article_json.get("title", "Novo Artigo")
+    content = article_json.get("content", {})
+    
+    contexto = content.get("contexto_clinico", "")[:500] + "..."
+    mudou = content.get("o_que_mudou", "")[:500] + "..."
+    pratica = content.get("o_que_muda_na_pratica", "")[:500] + "..."
+
     url_send = f"https://api.telegram.org/bot{token}/sendMessage"
     text = (
-        f"🩺 <b>NOVO ARTIGO PNYXMED GERADO!</b>\n\n"
-        f"<b>Título:</b> {article_title}\n\n"
+        f"🩺 <b>NOVO ARTIGO PNYXMED PARA APROVAÇÃO</b>\n\n"
+        f"📌 <b>Título:</b> {title}\n\n"
+        f"📖 <b>Contexto Clínico:</b>\n{contexto}\n\n"
+        f"⚡ <b>O Que Mudou:</b>\n{mudou}\n\n"
+        f"💡 <b>Dicas de Ouro (Prática):</b>\n{pratica}\n\n"
         f"Responda <b>SIM</b> para publicar agora ou <b>NÃO</b> para descartar."
     )
     
     try:
+        # Divide a mensagem se for muito grande para o Telegram (limite 4096)
+        if len(text) > 4000:
+            text = text[:3900] + "\n\n[Texto truncado...]"
+            
         resp = requests.post(url_send, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=15)
         if resp.status_code != 200:
             print(f"Erro na API do Telegram (sendMessage): {resp.status_code} - {resp.text}")
-            return True # Segue automático se o erro for de configuração do bot para não travar o job
+            return True 
         print(f"Solicitação de aprovação enviada para o Telegram (ID: {chat_id}).")
     except Exception as e:
         print(f"Erro de conexão ao enviar para o Telegram: {e}")
-        return True # Segue automático se falhar a rede
+        return True
 
     print("Aguardando resposta no Telegram (Timeout: 10 minutos)...")
     start_time = time.time()
@@ -196,7 +210,7 @@ Lembre-se: SAÍDA APENAS EM JSON VÁLIDO.
         
         # --- APROVAÇÃO VIA TELEGRAM ---
         # Se você não configurar TELEGRAM_BOT_TOKEN, ele pula esta etapa.
-        if not get_approval_from_telegram(article_json.get("title", "Novo Artigo")):
+        if not get_approval_from_telegram(article_json):
             return # Encerra sem salvar se não for aprovado
             
         # Garante a data correta
