@@ -20,7 +20,7 @@ def load_env():
 load_env()
 
 def get_approval_from_telegram(article_json):
-    """Envia o resumo completo do artigo para o Telegram e aguarda aprovação manual."""
+    """Envia o título do artigo para o Telegram e aguarda aprovação manual."""
     token = os.environ.get("BOT_API")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     
@@ -28,49 +28,23 @@ def get_approval_from_telegram(article_json):
         print("Aviso: Configurações do Telegram ausentes. Pulando aprovação (Modo Automático).")
         return True
     
-    # Limpa tags HTML e caracteres especiais que quebram o Telegram
-    import html
-    import re
-    def clean_html_for_telegram(text):
-        if not text: return ""
-        # 1. Escape caracteres HTML padrão (<, >, &)
-        text = html.escape(text)
-        # 2. Re-habilita apenas o negrito básico para o Telegram onde havia spans
-        # Note: O escape transformou <span...> em &lt;span...&gt;
-        text = re.sub(r'&lt;span[^&]*&gt;', '<b>', text)
-        text = text.replace('&lt;/span&gt;', '</b>')
-        return text
-
     title = article_json.get("title", "Novo Artigo")
-    content = article_json.get("content", {})
-
-    contexto = clean_html_for_telegram(content.get("contexto_clinico", ""))[:500] + "..."
-    mudou = clean_html_for_telegram(content.get("o_que_mudou", ""))[:500] + "..."
-    pratica = clean_html_for_telegram(content.get("o_que_muda_na_pratica", ""))[:500] + "..."
-
     url_send = f"https://api.telegram.org/bot{token}/sendMessage"
     text = (
-        f"🩺 <b>NOVO ARTIGO PNYXMED PARA APROVAÇÃO</b>\n\n"
-        f"📌 <b>Título:</b> {title}\n\n"
-        f"📖 <b>Contexto Clínico:</b>\n{contexto}\n\n"
-        f"⚡ <b>O Que Mudou:</b>\n{mudou}\n\n"
-        f"💡 <b>Dicas de Ouro (Prática):</b>\n{pratica}\n\n"
+        f"🩺 <b>PNYXMED BLOG: NOVO ARTIGO GERADO!</b>\n\n"
+        f"<b>Título:</b> {title}\n\n"
         f"Responda <b>SIM</b> para publicar agora ou <b>NÃO</b> para descartar."
     )
     
     try:
-        # Divide a mensagem se for muito grande para o Telegram (limite 4096)
-        if len(text) > 4000:
-            text = text[:3900] + "\n\n[Texto truncado...]"
-            
         resp = requests.post(url_send, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=15)
         if resp.status_code != 200:
             print(f"Erro na API do Telegram (sendMessage): {resp.status_code} - {resp.text}")
-            return False # Se não conseguiu mandar, melhor travar para não postar sem ver
+            return False 
         print(f"Solicitação de aprovação enviada para o Telegram (ID: {chat_id}).")
     except Exception as e:
         print(f"Erro de conexão ao enviar para o Telegram: {e}")
-        return False # Garante segurança se falhar a rede
+        return False
 
     print("Aguardando resposta no Telegram (Timeout: 10 minutos)...")
     start_time = time.time()
