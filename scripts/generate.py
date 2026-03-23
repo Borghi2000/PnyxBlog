@@ -36,10 +36,13 @@ def get_approval_from_telegram(article_title):
     )
     
     try:
-        requests.post(url_send, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"})
+        resp = requests.post(url_send, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=15)
+        if resp.status_code != 200:
+            print(f"Erro na API do Telegram (sendMessage): {resp.status_code} - {resp.text}")
+            return True # Segue automático se o erro for de configuração do bot para não travar o job
         print(f"Solicitação de aprovação enviada para o Telegram (ID: {chat_id}).")
     except Exception as e:
-        print(f"Erro ao enviar para o Telegram: {e}")
+        print(f"Erro de conexão ao enviar para o Telegram: {e}")
         return True # Segue automático se falhar a rede
 
     print("Aguardando resposta no Telegram (Timeout: 10 minutos)...")
@@ -57,11 +60,18 @@ def get_approval_from_telegram(article_title):
     while time.time() - start_time < 600: # 10 minutos
         try:
             offset = int(last_update_id) + 1
-            url_updates = f"https://api.telegram.org/bot{token}/getUpdates?offset={offset}&timeout=30"
-            resp = requests.get(url_updates, timeout=35).json()
+            url_updates = f"https://api.telegram.org/bot{token}/getUpdates?offset={offset}&timeout=10"
+            resp = requests.get(url_updates, timeout=15)
             
-            if resp.get("result"):
-                for update in resp["result"]:
+            if resp.status_code != 200:
+                print(f"Erro na API do Telegram (getUpdates): {resp.status_code}")
+                time.sleep(10)
+                continue
+                
+            resp_json = resp.json()
+            
+            if resp_json.get("result"):
+                for update in resp_json["result"]:
                     last_update_id = update["update_id"]
                     message = update.get("message", {})
                     
