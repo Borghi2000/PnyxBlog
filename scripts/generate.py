@@ -1,7 +1,7 @@
 import os
 import json
 import datetime
-import google.generativeai as genai
+from google import genai
 from ddgs import DDGS
 import requests
 import time
@@ -19,79 +19,6 @@ def load_env():
 
 load_env()
 
-def get_approval_from_telegram(article_json):
-    """Envia o título do artigo para o Telegram e aguarda aprovação manual."""
-    token = os.environ.get("BOT_API")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-    
-    if not token or not chat_id:
-        print("Aviso: Configurações do Telegram ausentes. Pulando aprovação (Modo Automático).")
-        return True
-    
-    title = article_json.get("title", "Novo Artigo")
-    url_send = f"https://api.telegram.org/bot{token}/sendMessage"
-    text = (
-        f"🩺 <b>PNYXMED BLOG: NOVO ARTIGO GERADO!</b>\n\n"
-        f"<b>Título:</b> {title}\n\n"
-        f"Responda <b>SIM</b> para publicar agora ou <b>NÃO</b> para descartar."
-    )
-    
-    try:
-        resp = requests.post(url_send, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=15)
-        if resp.status_code != 200:
-            print(f"Erro na API do Telegram (sendMessage): {resp.status_code} - {resp.text}")
-            return False 
-        print(f"Solicitação de aprovação enviada para o Telegram (ID: {chat_id}).")
-    except Exception as e:
-        print(f"Erro de conexão ao enviar para o Telegram: {e}")
-        return False
-
-    print("Aguardando resposta no Telegram (Timeout: 10 minutos)...")
-    start_time = time.time()
-    last_update_id = 0
-    
-    # Busca o último update_id para ignorar mensagens antigas
-    try:
-        initial_updates = requests.get(f"https://api.telegram.org/bot{token}/getUpdates?limit=1").json()
-        if initial_updates.get("result"):
-            last_update_id = initial_updates["result"][-1]["update_id"]
-    except:
-        pass
-
-    while time.time() - start_time < 600: # 10 minutos
-        try:
-            offset = int(last_update_id) + 1
-            url_updates = f"https://api.telegram.org/bot{token}/getUpdates?offset={offset}&timeout=10"
-            resp = requests.get(url_updates, timeout=15)
-            
-            if resp.status_code != 200:
-                print(f"Erro na API do Telegram (getUpdates): {resp.status_code}")
-                time.sleep(10)
-                continue
-                
-            resp_json = resp.json()
-            
-            if resp_json.get("result"):
-                for update in resp_json["result"]:
-                    last_update_id = update["update_id"]
-                    message = update.get("message", {})
-                    
-                    # Verifica se a mensagem veio do chat_id correto
-                    if str(message.get("chat", {}).get("id")) == str(chat_id):
-                        text_received = message.get("text", "").upper().strip()
-                        if text_received == "SIM":
-                            print("✅ Artigo APROVADO via Telegram!")
-                            return True
-                        if text_received in ["NÃO", "NAO", "NO"]:
-                            print("❌ Artigo REJEITADO via Telegram.")
-                            return False
-        except Exception as e:
-            print(f"Erro ao consultar updates: {e}")
-        
-        time.sleep(5)
-    
-    print("⏰ Timeout: Nenhuma resposta recebida no Telegram. Artigo descartado.")
-    return False
 
 def get_medical_news():
     """Busca as últimas notícias médicas e diretrizes usando DuckDuckGo (Gratuito)"""
@@ -118,9 +45,7 @@ def generate_article():
         print("Certifique-se de que a secret esteja configurada no seu provedor ou ambiente.")
         return
     
-    genai.configure(api_key=api_key)
-    # Using gemini-3-flash-preview as requested by the user
-    model = genai.GenerativeModel('gemini-3-flash-preview')
+    client = genai.Client(api_key=api_key)
     
     news_context = get_medical_news()
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -184,10 +109,10 @@ Lembre-se: SAÍDA APENAS EM JSON VÁLIDO.
 """
 
     print("Gerando o artigo via API...")
-    response = model.generate_content(
-        prompt,
-        # Gemini specific setting to guarantee JSON output
-        generation_config={"response_mime_type": "application/json"} 
+    response = client.models.generate_content(
+        model='gemini-3-flash-preview', 
+        contents=prompt,
+        config={'response_mime_type': 'application/json'}
     )
     
     content = response.text
@@ -196,11 +121,7 @@ Lembre-se: SAÍDA APENAS EM JSON VÁLIDO.
     try:
         article_json = json.loads(content)
         
-        # --- APROVAÇÃO VIA TELEGRAM ---
-        # Se você não configurar TELEGRAM_BOT_TOKEN, ele pula esta etapa.
-        if not get_approval_from_telegram(article_json):
-            print("🚫 Artigo rejeitado no Telegram. Abortando.")
-            exit(1) # Força erro no CI para não prosseguir
+        print("✅ Artigo gerado e aprovado automaticamente.")
             
         # Garante a data correta
         article_json["date"] = today_str
