@@ -1,5 +1,18 @@
 [
   {
+    "id": "2026-05-18-insuficiencia-cardiaca-fracao-ejecao-reduzida",
+    "title": "Manejo da Insuficiência Cardíaca com Fração de Ejeção Reduzida (ICFEr): Pilares da Terapia Quádrupla e Novas Diretrizes da SBC",
+    "date": "2026-05-18",
+    "category": "Atualização Médica",
+    "tags": [
+      "Cardiologia",
+      "Clínica Médica",
+      "ENARE",
+      "Diretrizes SBC"
+    ],
+    "file": "2026-05-18-insuficiencia-cardiaca-fracao-ejecao-reduzida.json"
+  },
+  {
     "id": "2026-03-24-reforma-curricular-residencia-medica-brasil",
     "title": "O Impacto das Reformas Curriculares e a Consolidação do ENARE no Cenário das Provas de Residência Médica 2026",
     "date": "2026-03-24",
@@ -32,7 +45,14 @@
     "title": "Convergência e Divergência na Cardiologia Preventiva: Uma Análise Comparativa das Diretrizes AHA 2026 e SBC 2025",
     "date": "2026-03-24",
     "category": "Atualização Médica",
-    "tags": ["Cardiologia", "AHA 2026", "SBC 2025", "Dislipidemia", "Hipertensão", "PREVENT"],
+    "tags": [
+      "Cardiologia",
+      "AHA 2026",
+      "SBC 2025",
+      "Dislipidemia",
+      "Hipertensão",
+      "PREVENT"
+    ],
     "file": "2026-03-24-aha-2026-vs-sbc-2025-comparativo.json"
   },
   {
@@ -40,7 +60,13 @@
     "title": "Ressuscitação 2025/2026: A Nova Era da Cadeia de Sobrevivência Unificada da AHA",
     "date": "2026-03-24",
     "category": "Emergência",
-    "tags": ["RCP", "AHA 2025", "ACLS", "Emergência", "Parada Cardíaca"],
+    "tags": [
+      "RCP",
+      "AHA 2025",
+      "ACLS",
+      "Emergência",
+      "Parada Cardíaca"
+    ],
     "file": "2026-03-24-aha-2026-diretrizes-rcp-ace.json"
   },
   {
@@ -48,7 +74,13 @@
     "title": "ATLS 11ª Edição (2025): Do ABCDE ao xABCDE – O Fim da Morte por Exsangueação",
     "date": "2026-03-24",
     "category": "Trauma",
-    "tags": ["Trauma", "ATLS 11", "Cirurgia", "xABCDE", "Hemorragia"],
+    "tags": [
+      "Trauma",
+      "ATLS 11",
+      "Cirurgia",
+      "xABCDE",
+      "Hemorragia"
+    ],
     "file": "2026-03-24-atls-2025-novidades-implicacoes.json"
   },
   {
@@ -56,7 +88,13 @@
     "title": "Sepse 2026: A 'Era Phoenix' e o Dilema da 1ª Hora – Surviving Sepsis vs. ILAS",
     "date": "2026-03-24",
     "category": "Terapia Intensiva",
-    "tags": ["Sepse", "SSC 2026", "ILAS", "Choque Séptico", "Escore Phoenix"],
+    "tags": [
+      "Sepse",
+      "SSC 2026",
+      "ILAS",
+      "Choque Séptico",
+      "Escore Phoenix"
+    ],
     "file": "2026-03-24-comparativo-ssc-2026-ilas.json"
   },
   {
@@ -64,7 +102,13 @@
     "title": "Diretrizes SBC 2025-2027: O 'Alerta 12x8' e a Gestão de Risco Extremo no Brasil",
     "date": "2026-03-24",
     "category": "Cardiologia",
-    "tags": ["Cardiologia", "SBC 2025", "Hipertensão", "Dislipidemia", "Risco Extremo"],
+    "tags": [
+      "Cardiologia",
+      "SBC 2025",
+      "Hipertensão",
+      "Dislipidemia",
+      "Risco Extremo"
+    ],
     "file": "2026-03-24-diretrizes-sbc-2025-mudancas-impacto.json"
   }
 ]
